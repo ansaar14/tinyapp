@@ -2,12 +2,14 @@ const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 const cookieParser = require('cookie-parser');
+
 app.use(cookieParser());
 app.set("view engine", "ejs");
+
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
 //function to generate random 6 alphanumeric characters //
-function generateRandomString() {
+const generateRandomString = function() {
   let random = "";
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   for (let i = 0; i < 6; i++) {
@@ -46,12 +48,12 @@ app.get("/hello", (req, res) => {
 app.get("/urls", (req, res) => {
   console.log(req.cookies);
   const email = req.cookies["email"]
-  const templateVars = { urls: urlDatabase, username: req.cookies["user_id"], email };
+  const templateVars = { urls: urlDatabase, user_id: req.cookies["user_id"], email };
   res.render("urls_index", templateVars);
 });
 app.get("/urls/new", (req, res) => {
   const email = req.cookies["email"]
-  const templateVars = {  username: req.cookies["user_id"], email };
+  const templateVars = {  user_id: req.cookies["user_id"], email };
   res.render("urls_new", templateVars);
 });
 // app.get("/urls/:id", (req, res) => {
@@ -86,12 +88,12 @@ app.get('/urls/:id', (req, res) => {
 
   const shortURL = req.params.id;
   const longURL = urlDatabase[shortURL];
-  const username = req.cookies["user_id"];
+  const user_id = req.cookies["user_id"];
   console.log("shortURL:", shortURL, "longUrl:", longURL);
   const templateVars = {
     shortURL,
     longURL,
-    username,
+    user_id,
     email
   };
   res.render('urls_show', templateVars);
@@ -117,13 +119,17 @@ app.post('/login', (req, res) => {
   console.log(req.body);
   const email = req.body.email;
   const userID = getUserIdByEmail(email);
-  if (!userID) return res.status(401).send("Wrong credentials/not registered");
-
+  const password = req.body.password
+  if (!userID){ 
+    res.status(403).send("Email cannot be found");
+  } else if(password !== users[userID].password) {
+    res.status(403).send("Incorrect password");
+  } else {
   res.cookie('user_id', userID);
   res.cookie('email', email);
 
-  // res.send(`Username: ${username}`);
   res.redirect("/urls");
+  }
 });
 app.post("/logout", (req, res) => {
   const email = req.cookies["email"]
@@ -133,7 +139,7 @@ app.post("/logout", (req, res) => {
 });
 //show registration page //
 app.get("/register", (req, res) => {
-  let templateVars = { username: req.cookies.user_id };
+  let templateVars = { user_id: req.cookies.user_id };
   res.render("register", templateVars);
 
 });
