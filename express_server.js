@@ -5,10 +5,12 @@ const cookieParser = require('cookie-parser')
 
 
 app.use(cookieParser())
-
 app.set("view engine", "ejs");
 
+const bodyParser = require("body-parser");
+app.use(bodyParser.urlencoded({extended: true}));
 
+//function to generate random 6 alphanumeric characters //
 function generateRandomString() {
   let random = "";
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -19,16 +21,11 @@ function generateRandomString() {
   return random;
 }
 
-
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 
 };
-
-const bodyParser = require("body-parser");
-app.use(bodyParser.urlencoded({extended: true}));
-
 
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -53,7 +50,8 @@ app.get("/urls", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  const templateVars = {  username: req.cookies["username"] };
+  res.render("urls_new", templateVars );
 });
 
 // app.get("/urls/:id", (req, res) => {
@@ -92,10 +90,13 @@ app.get('/urls/:id', (req, res) => {
   console.log("hello")
 const shortURL = req.params.id
 const longURL = urlDatabase[shortURL]
+const username = req.cookies["username"]
+
 console.log("shortURL:", shortURL, "longUrl:", longURL)
 const templateVars = {
   shortURL,
-  longURL
+  longURL,
+  username
 }
 res.render('urls_show', templateVars)
 })
@@ -119,3 +120,15 @@ app.post("/logout", (req, res) => {
   res.clearCookie('username');
   res.redirect('/urls');
 });
+
+//show registration page //
+app.get("/register", (req, res) => {
+  let templateVars = { username: req.cookies.username };
+  res.render("register", templateVars);
+});
+
+//create new account //
+
+// app.post("/register", (req, res) => {
+
+// })
