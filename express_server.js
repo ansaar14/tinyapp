@@ -121,9 +121,15 @@ app.post("/urls", (req, res) => {
 
 
 app.get("/u/:shortURL", (req, res) => {
-  const shortURL = req.params.shortURL;
-  const longURL = urlDatabase[shortURL].longURL;
-      res.redirect(longURL);
+  let userURLs;
+  if (req.cookies["user_id"]) {
+    userURLs = urlsForUser(req.cookies["user_id"], urlDatabase);
+  } else {
+    res.status(401);
+    res.send("You are not authorized to view this Short Link, please Log In");
+    return;
+  };
+
     
 });
 
@@ -193,15 +199,18 @@ app.post("/urls/:id", (req, res) => {
 
 app.get('/login', (req, res) => {
   
-  const templateVars = {  
-    user: users[req.cookies.user_id],
-    email: req.cookies.email, 
-    error_msg: req.cookies.error
-  };
+  if (req.cookies["user_id"]) {
+    res.redirect('/urls');
+    return;
+  }
+  const templateVars = { user: users[req.cookies.user_id],email: req.cookies.email, 
+  error_msg: req.cookies.error };
   res.clearCookie("error");
-  res.render('login', templateVars);
+  res.render("login", templateVars);
+})
+  
 
-});
+
 
 app.post('/login', (req, res) => {
   console.log(req.body);
