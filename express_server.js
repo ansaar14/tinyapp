@@ -8,7 +8,10 @@ app.set("view engine", "ejs");
 
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
+
+
 //function to generate random 6 alphanumeric characters //
+
 const generateRandomString = function() {
   let random = "";
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -17,16 +20,19 @@ const generateRandomString = function() {
   }
   return random;
 }
+
+// object databases // 
 const urlDatabase = {
-  b6UTxQ: {
-      longURL: "https://www.tsn.ca",
-      userID: "aJ48lW"
-  },
-  i3BoGr: {
-      longURL: "https://www.google.ca",
-      userID: "aJ48lW"
-  }
+    b6UTxQ: {
+        longURL: "https://www.tsn.ca",
+        userID: "aJ48lW"
+    },
+    i3BoGr: {
+        longURL: "https://www.google.ca",
+        userID: "aJ48lW"
+    }
 };
+
 const users = {
   "userRandomID": {
     id: "userRandomID",
@@ -39,27 +45,51 @@ const users = {
     password: "dishwasher-funk"
   }
 };
+
+
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
-app.listen(8080, () => {
-  console.log(`Example app listening on port ${PORT}!`);
-});
+
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
 });
+
 app.get("/urls", (req, res) => {
   console.log(req.cookies);
   const email = req.cookies["email"]
-  const templateVars = { urls: urlDatabase, user_id: req.cookies["user_id"], email };
+  const user_id = req.cookies["user_id"]
+
+  let error = ""
+  if(user_id === undefined){
+    error = "Please log in or register before viewing URLs"
+  }
+    const filteredUrls = {};
+    for(const url in urlDatabase){
+      if (urlDatabase[url].userID === user_id){
+      filteredUrls[url] = {
+        longURL: urlDatabase[url].longURL,
+        userID: user_id
+      }
+    }
+  }
+  console.log("filteredUrls::::",filteredUrls);
+  const templateVars = { urls: filteredUrls, user_id: req.cookies["user_id"], email, error: error };
   res.render("urls_index", templateVars);
+
 });
+
+
 app.get("/urls/new", (req, res) => {
   const email = req.cookies["email"]
   const user_id = req.cookies["user_id"]
+  const templateVars = {
+    user_id,
+    email
+  }
   if (!user_id) {
     res.cookie("error", "You can only create tiny URLs if you are logged in")
     res.redirect('/login');
@@ -78,32 +108,69 @@ app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
   const longURL = req.body.longURL;
   //  console.log(longURL);
-  urlDatabase[shortURL] = longURL;
+  urlDatabase[shortURL] = {
+    longURL,
+    userID: req.cookies["user_id"],
+
+  };
+  console.log("urlDatabase", urlDatabase);
   //  console.log(urlDatabase);
   // Log the POST request body to the console
   res.redirect(`/urls/${shortURL}`);         // Respond with 'Ok' (we will replace this)
 });
+
+
 app.get("/u/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
-  const longURL = urlDatabase[shortURL];
+  const longURL = urlDatabase[shortURL].longURL;
+      res.redirect(longURL);
+    
+});
 
-  res.redirect(longURL);
+app.post("/u/:shortURL/update", (req, res) => {
+  const shortURL = req.params.shortURL;
+
+  if(!urlDatabase[shortURL]) {
+    res.status(404).send('url not in database');
+  } else if(! (req.cookies.user_id === urlDatabase[shortURL].userID)) {
+    res.status(403).send('Cannot update URL that you do not own')
+  } else {
+    urlDatabase[shortURL].longURL = 'http://' + req.body.longURL;
+    res.redirect(`/urls/${shortURL}`);
+    
+}
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
-  delete urlDatabase[req.params.shortURL];
-  res.redirect(`/urls`);
-  console.log("urlDatabase", urlDatabase);
+
+  const userURLs = urlsForUser(req.cookies["user_id"], urlDatabase);
+  for (let short in userURLs) {
+    if (short === req.params.shortURL) {
+      delete urlDatabase[req.params.shortURL];
+      res.redirect('/urls');
+      return;
+    }
+  }
+  res.status(401);
+  res.send("You are not authorized to delete this URL");
+  return;
 });
+  
 
+
+// displays long and shortURL and creates an error message if the id is different //
 app.get('/urls/:id', (req, res) => {
-  console.log("hello");
+  console.log("I am edit!!!!");
   const email = req.cookies["email"]
-
   const shortURL = req.params.id;
-  const longURL = urlDatabase[shortURL];
+  if(!urlDatabase[shortURL]){
+    res.status(404).send("URL does not exist");
+  } else {
+    // const longURL = urlDatabase[shortURL].longURL;
+  // const shortURL = req.params.id;
+  const longURL = urlDatabase[shortURL].longURL;
   const user_id = req.cookies["user_id"];
-  console.log("shortURL:", shortURL, "longUrl:", longURL);
+
   const templateVars = {
     shortURL,
     longURL,
@@ -111,12 +178,16 @@ app.get('/urls/:id', (req, res) => {
     email
   };
   res.render('urls_show', templateVars);
+}
 });
 
 app.post("/urls/:id", (req, res) => {
-  console.log("Hello");
+  console.log("Hello - I am post");
   const shortURL = req.params.id;
-  urlDatabase[shortURL] = req.body.newURL;
+  urlDatabase[shortURL] = {
+    longURL: req.body.newURL,
+    userID: req.cookies['user_id'],
+  };
   res.redirect('/urls');
 });
 
@@ -208,3 +279,18 @@ const getUserByEmail = (email) => {
   }
 
 }
+
+app.listen(8080, () => {
+  console.log(`Example app listening on port ${PORT}!`);
+});
+const urlsForUser = (id) => {
+  let userUrls = {};
+
+  for (const shortURL in urlDatabase) {
+    if (urlDatabase[shortURL].userID === id) {
+      userUrls[shortURL] = urlDatabase[shortURL];
+    }
+  }
+
+  return userUrls;
+};
