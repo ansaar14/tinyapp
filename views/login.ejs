@@ -10,8 +10,11 @@
 
   <%- include('partials/_header') %>
 
-       
-          <h3>Create Account</h3>
+  <%if(error_msg){%>
+    <h3><%=error_msg%> </h3>
+ <% } %>
+         <h3> </h3>
+          <h3>Login</h3>
           <form action='/login' method="POST">
             <label for="email">Email:</label>
             <input class="form-control" type="email" placeholder="name@example.com" name="email" style="width: 300px; margin: 1em">
