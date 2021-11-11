@@ -2,6 +2,8 @@ const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 const cookieParser = require('cookie-parser');
+const bcrypt = require('bcryptjs');
+
 
 app.use(cookieParser());
 app.set("view engine", "ejs");
@@ -215,25 +217,36 @@ app.get('/login', (req, res) => {
 app.post('/login', (req, res) => {
   console.log(req.body);
   const email = req.body.email;
-  const userID = getUserIdByEmail(email);
   const password = req.body.password
-  if (!userID){ 
-    res.status(403).send("Email cannot be found");
-  } else if(password !== users[userID].password) {
-    res.status(403).send("Incorrect password");
-  } else {
-  res.cookie('user_id', userID);
-  res.cookie('email', email);
+
+  const user = getUserByEmail(users, email);
+  
+  if (!user){
+    return res.status(403).send("Email cannot be found");
+  } 
+
+  const comparePassword = bcrypt.compareSync(password, user.password); // returns true
+  if (!comparePassword){
+    return res.status(403).send("Incorrect password");
+  }
+
+
+  res.cookie('user_id', user.id);
+  res.cookie('email', user.email);
 
   res.redirect("/urls");
-  }
+  
+
 });
+
 app.post("/logout", (req, res) => {
   const email = req.cookies["email"]
   res.clearCookie('user_id');
   res.clearCookie('email');
   res.redirect('/urls');
 });
+
+
 //show registration page //
 app.get("/register", (req, res) => {
   const email = req.cookies["email"]
@@ -246,6 +259,7 @@ app.post("/register", (req, res) => {
   console.log("hello");
   const email = req.body.email;
   const password = req.body.password;
+  const hashedPass = bcrypt.hashSync(password, 10);
   if (email === "" || password === "")
     return res.status(400).send("Please type in email and/or password");
 
@@ -257,8 +271,10 @@ app.post("/register", (req, res) => {
     const newUser = {
       id: generateRandomString(),
       email: req.body.email,
-      password: req.body.password
+      password: hashedPass
     };
+    console.log("checking hash password ++++", users);
+
     users[newUser.id] = newUser;
 
     res.cookie('user_id', newUser.id);
@@ -267,6 +283,7 @@ app.post("/register", (req, res) => {
     console.log('users incl newly created----->', users);
   }
 });
+
 const isEmailTaken = (email) => {
   for (let user in users) {
 
@@ -274,24 +291,21 @@ const isEmailTaken = (email) => {
     return false;
   }
 };
-const getUserIdByEmail = (email) => {
+
+const getUserByEmail = (users, email) => {
 
   for (let user in users) {
-    if (users[user].email === email) return users[user].id;
+    if (users[user].email === email) 
+    return users[user]
   }
 };
 
-const getUserByEmail = (email) => {
-
-  for(let user in users) {
-    if(users[user].email === email) return users[user].id
-  }
-
-}
 
 app.listen(8080, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
+
+
 const urlsForUser = (id) => {
   let userUrls = {};
 
@@ -303,3 +317,4 @@ const urlsForUser = (id) => {
 
   return userUrls;
 };
+
