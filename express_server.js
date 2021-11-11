@@ -18,8 +18,14 @@ const generateRandomString = function() {
   return random;
 }
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  b6UTxQ: {
+      longURL: "https://www.tsn.ca",
+      userID: "aJ48lW"
+  },
+  i3BoGr: {
+      longURL: "https://www.google.ca",
+      userID: "aJ48lW"
+  }
 };
 const users = {
   "userRandomID": {
@@ -53,8 +59,13 @@ app.get("/urls", (req, res) => {
 });
 app.get("/urls/new", (req, res) => {
   const email = req.cookies["email"]
-  const templateVars = {  user_id: req.cookies["user_id"], email };
+  const user_id = req.cookies["user_id"]
+  if (!user_id) {
+    res.cookie("error", "You can only create tiny URLs if you are logged in")
+    res.redirect('/login');
+  }
   res.render("urls_new", templateVars);
+
 });
 // app.get("/urls/:id", (req, res) => {
 //   const shortURL = req.params.shortURL;
@@ -75,13 +86,16 @@ app.post("/urls", (req, res) => {
 app.get("/u/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   const longURL = urlDatabase[shortURL];
+
   res.redirect(longURL);
 });
+
 app.post("/urls/:shortURL/delete", (req, res) => {
   delete urlDatabase[req.params.shortURL];
   res.redirect(`/urls`);
   console.log("urlDatabase", urlDatabase);
 });
+
 app.get('/urls/:id', (req, res) => {
   console.log("hello");
   const email = req.cookies["email"]
@@ -110,9 +124,12 @@ app.get('/login', (req, res) => {
   
   const templateVars = {  
     user: users[req.cookies.user_id],
-    email: req.cookies.email
+    email: req.cookies.email, 
+    error_msg: req.cookies.error
   };
+  res.clearCookie("error");
   res.render('login', templateVars);
+
 });
 
 app.post('/login', (req, res) => {
@@ -139,7 +156,8 @@ app.post("/logout", (req, res) => {
 });
 //show registration page //
 app.get("/register", (req, res) => {
-  let templateVars = { user_id: req.cookies.user_id };
+  const email = req.cookies["email"]
+  let templateVars = { user_id: req.cookies.user_id, email };
   res.render("register", templateVars);
 
 });
