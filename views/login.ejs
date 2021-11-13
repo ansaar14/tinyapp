@@ -11,9 +11,9 @@
   <%- include('partials/_header') %>
 
   <%if(error_msg){%>
-    <h3><%=error_msg%> </h3>
+    <h4 class="alert alert-danger text-center"><%=error_msg%>  </h4>
  <% } %>
-         <h3> </h3>
+        
           <h3>Login</h3>
           <form action='/login' method="POST">
             <label for="email">Email:</label>
