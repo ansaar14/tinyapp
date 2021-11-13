@@ -69,16 +69,16 @@ app.get("/urls", (req, res) => {
   const filteredUrls = {};
   for (const url in urlDatabase) {
     if (urlDatabase[url].userID === user_id) {
-        filteredUrls[url] = {
+      filteredUrls[url] = {
         longURL: urlDatabase[url].longURL,
         userID: user_id
       };
     }
   }
-  const templateVars = { 
-    urls: filteredUrls, 
-    user_id: req.session.user_id, 
-    email, 
+  const templateVars = {
+    urls: filteredUrls,
+    user_id: req.session.user_id,
+    email,
     error: error };
 
   res.render("urls_index", templateVars);
@@ -112,17 +112,14 @@ app.post("/urls", (req, res) => {
 
   };
   
-  res.redirect(`/urls/${shortURL}`);    
+  res.redirect(`/urls/${shortURL}`);
 });
 
 // permissions and short URL redirection //
 app.get("/u/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   
-
-  
-  let userURLs;
-  if (!urlDatabase[shortURL]){
+  if (!urlDatabase[shortURL]) {
     res.send("short URL not valid");
     return;
 
@@ -130,11 +127,11 @@ app.get("/u/:shortURL", (req, res) => {
   const longURL = urlDatabase[shortURL].longURL;
   if (!isValidHttpUrl(longURL)) {
 
-      res.send("You do not have a valid URL");
-      return;
+    res.send("You do not have a valid URL");
+    return;
       
-    }
-    res.redirect(longURL);
+  }
+  res.redirect(longURL);
 
 
 
@@ -218,10 +215,10 @@ app.get('/login', (req, res) => {
     return;
   }
 
-  const templateVars = { 
-    user: users[req.session.user_id], 
+  const templateVars = {
+    user: users[req.session.user_id],
     email: req.session.email,
-    error_msg: req.session.error 
+    error_msg: req.session.error
   };
   
   delete req.session.error;
@@ -237,9 +234,9 @@ app.post('/login', (req, res) => {
   
   const user = getUserByEmail(users, email);
 
-  console.log("82378123719 userrrr", user )
+  console.log("82378123719 userrrr", user);
 
-  console.log("82378123719 password", password)
+  console.log("82378123719 password", password);
 
   if (!user) {
     return res.status(403).send("Email cannot be found");
@@ -247,7 +244,7 @@ app.post('/login', (req, res) => {
 
   const comparePassword = bcrypt.compareSync(password, user.password); // returns true
 
-  console.log("compare passs", comparePassword)
+  console.log("compare passs", comparePassword);
 
   if (!comparePassword) {
 
@@ -275,8 +272,8 @@ app.post("/logout", (req, res) => {
 //show registration page //
 app.get("/register", (req, res) => {
   const email = req.session.email;
-  let templateVars = { 
-    user_id: req.session.user_id, 
+  let templateVars = {
+    user_id: req.session.user_id,
     email };
 
   res.render("register", templateVars);
