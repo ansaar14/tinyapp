@@ -53,4 +53,14 @@ const isValidHttpUrl = function(string) {
 };
 
 
-module.exports = { isEmailTaken, getUserByEmail, generateRandomString, urlsForUser, isValidHttpUrl };
+const prependHttp = function(url){
+  if (isValidHttpUrl(url)){
+    return url
+  }
+  else {
+    return `https://${url}`
+  }
+
+}
+
+module.exports = { isEmailTaken, getUserByEmail, generateRandomString, urlsForUser, isValidHttpUrl, prependHttp };
