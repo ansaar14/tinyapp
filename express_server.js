@@ -3,8 +3,7 @@ const app = express();
 const PORT = 8080; // default port 8080
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
-const { isEmailTaken, getUserByEmail, urlsForUser, generateRandomString, isValidHttpUrl} = require('./helpers');
-
+const { isEmailTaken, getUserByEmail, urlsForUser, generateRandomString, isValidHttpUrl, prependHttp} = require('./helpers');
 
 app.use(cookieSession({
   name: 'session',
@@ -111,27 +110,25 @@ app.post("/urls", (req, res) => {
     userID: req.session.user_id
 
   };
-  
+  console.log(urlDatabase);
   res.redirect(`/urls/${shortURL}`);
 });
 
 // permissions and short URL redirection //
 app.get("/u/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
-  
+  console.log("line 121");
   if (!urlDatabase[shortURL]) {
+    console.log("line 123");
     res.send("short URL not valid");
     return;
 
   }
   const longURL = urlDatabase[shortURL].longURL;
-  if (!isValidHttpUrl(longURL)) {
 
-    res.send("You do not have a valid URL");
-    return;
-      
-  }
-  res.redirect(longURL);
+  console.log("line 129", longURL);
+
+  res.redirect(prependHttp(longURL));
 
 
 
