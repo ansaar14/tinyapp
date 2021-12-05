@@ -24,9 +24,11 @@ const getUserByEmail = (users, email) => {
 const isEmailTaken = (users, email) => {
   for (let user in users) {
 
-    if (users[user].email === email) return true;
-    return false;
+    if (users[user].email === email){
+    return users[user];
+    }
   }
+  return undefined;
 };
 
 //function to generate random 6 alphanumeric characters //
