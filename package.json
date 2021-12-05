@@ -5,7 +5,7 @@
   "main": "express_server.js",
   "scripts": {
     "start": "./node_modules/.bin/nodemon -L express_server.js",
-    "test":  "./node_modules/mocha/bin/mocha"
+    "test": "./node_modules/mocha/bin/mocha"
   },
   "repository": {
     "type": "git",
@@ -25,7 +25,8 @@
     "cookie-session": "^1.4.0",
     "ejs": "^3.1.6",
     "express": "^4.17.1",
-    "lsof": "^0.1.0"
+    "lsof": "^0.1.0",
+    "prepend-http": "^4.0.0"
   },
   "devDependencies": {
     "chai": "^4.3.4",

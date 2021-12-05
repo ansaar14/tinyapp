@@ -158,13 +158,17 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 app.get("/urls/:id", (req, res) => {
   const email = req.session.email;
   const shortURL = req.params.id;
+  const user_id = req.session.user_id;
+  const userURLs = urlsForUser(user_id, urlDatabase);
 
   if (!urlDatabase[shortURL]) {
     res.status(404).send("short URL does not exist");
-  } else {
-    const longURL = urlDatabase[shortURL].longURL;
-    const user_id = req.session.user_id;
+  } else if (!user_id || !userURLs) {
+    return res.status(403).send("Sorry, you have to make an account or log-in to do that!😓");
 
+  }
+  else {
+    const longURL = urlDatabase[shortURL].longURL;
     const templateVars = {
       shortURL,
       longURL,
@@ -233,11 +237,17 @@ app.post("/logout", (req, res) => {
 
 //show registration page //
 app.get("/register", (req, res) => {
+
+  if(req.session.userID){
+    res.redirect('/urls');
+    return;
+  }
   const email = req.session.email;
   let templateVars = {
     user_id: req.session.user_id,
     email,
   };
+
 
   res.render("register", templateVars);
 });
