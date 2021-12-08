@@ -49,7 +49,7 @@ const users = {
 };
 
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  res.redirect("/urls");
 });
 
 app.get("/urls.json", (req, res) => {
@@ -159,11 +159,11 @@ app.get("/urls/:id", (req, res) => {
   const email = req.session.email;
   const shortURL = req.params.id;
   const user_id = req.session.user_id;
-  const userURLs = urlsForUser(user_id, urlDatabase);
+  
 
   if (!urlDatabase[shortURL]) {
     res.status(404).send("short URL does not exist");
-  } else if (!user_id || !userURLs) {
+  } else if (!user_id || urlDatabase[shortURL].userID !== user_id) {
     return res.status(403).send("Sorry, you have to make an account or log-in to do that!😓");
 
   }
